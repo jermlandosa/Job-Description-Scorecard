@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Job Description Scorecard</title>
+<meta name="description" content="Paste a JD and get an instant, transparent score with fix suggestions." />
+<style>
+  :root {
+    --bg:#0b1020; --panel:#0f1530; --ink:#e8edff; --muted:#9db0ff;
+    --good:#30dd89; --warn:#ffcd55; --bad:#ff6b6b; --brand:#7aa2ff; --line:#202848;
+  }
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  header{padding:24px 18px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+  header h1{margin:0;font-size:20px;font-weight:700;letter-spacing:.2px}
+  header .tag{font-size:12px;color:var(--muted)}
+  main{max-width:1100px;margin:0 auto;padding:18px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media (max-width:980px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+  textarea{width:100%;min-height:340px;background:#0c1230;border:1px solid var(--line);border-radius:12px;color:var(--ink);padding:14px;font:14px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  button{appearance:none;border:1px solid var(--line);background:#10183a;color:var(--ink);padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:600}
+  button.primary{background:var(--brand);border-color:transparent;color:#0a0f22}
+  button.ghost{background:transparent}
+  .score-wrap{display:flex;align-items:center;gap:14px;margin:6px 0 14px}
+  .score{font-size:42px;font-weight:800}
+  .pill{padding:4px 8px;border-radius:999px;font-size:12px;border:1px solid var(--line);color:var(--muted)}
+  .bar{height:10px;background:#121a3a;border-radius:99px;overflow:hidden}
+  .bar > span{display:block;height:100%}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0}
+  .row label{font-size:13px;color:var(--muted)}
+  .row .val{font-weight:700}
+  .bad{color:var(--bad)} .warn{color:var(--warn)} .good{color:var(--good)}
+  h2{margin:4px 0 10px;font-size:16px}
+  .list{display:grid;grid-template-columns:1fr;gap:8px}
+  .item{padding:10px 12px;border:1px dashed var(--line);border-radius:10px}
+  .item.bad{border-color:#3a1d1d;background:#1a0f12}
+  .item.warn{border-color:#4a3a18;background:#141008}
+  .item.good{border-color:#213a2a;background:#0e1712}
+  .small{font-size:12px;color:var(--muted)}
+  .footer{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+  .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+  .muted{color:var(--muted)}
+  .section{margin-top:14px}
+  .copy{font-size:12px;border:1px dashed var(--line);border-radius:8px;padding:8px}
+  .kbd{font:12px ui-monospace,Menlo,Consolas,monospace;background:#0b1128;border:1px solid var(--line);padding:1px 6px;border-radius:6px}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Job Description Scorecard</h1>
+    <div class="tag">Paste a JD → get a transparent score with instant fixes.</div>
+  </div>
+  <div class="tag">Built by Jeremy • v1.0</div>
+</header>
+
+<main class="grid">
+  <section class="card">
+    <h2>1) Paste JD</h2>
+    <textarea id="jd" placeholder="Paste the full job description here..."></textarea>
+    <div class="controls">
+      <button class="primary" id="analyzeBtn">Analyze</button>
+      <button id="rewriteBtn">Rewrite (rule-based)</button>
+      <button class="ghost" id="sampleBtn">Load sample</button>
+      <button class="ghost" id="clearBtn">Clear</button>
+    </div>
+    <div class="section small">Nothing is uploaded; all analysis runs locally in your browser.</div>
+  </section>
+
+  <section class="card" id="results" aria-live="polite">
+    <h2>2) Score & Findings</h2>
+    <div class="score-wrap">
+      <div class="score" id="totalScore">–</div>
+      <div class="pill" id="verdict">Awaiting input</div>
+    </div>
+
+    <div class="row"><label>Clarity</label><div class="val" id="s_clarity">–</div></div>
+    <div class="bar"><span id="b_clarity" style="width:0;background:var(--good)"></span></div>
+
+    <div class="row"><label>Structure</label><div class="val" id="s_structure">–</div></div>
+    <div class="bar"><span id="b_structure" style="width:0;background:var(--good)"></span></div>
+
+    <div class="row"><label>Requirements realism</label><div class="val" id="s_require">–</div></div>
+    <div class="bar"><span id="b_require" style="width:0;background:var(--good)"></span></div>
+
+    <div class="row"><label>Inclusivity</label><div class="val" id="s_inclusive">–</div></div>
+    <div class="bar"><span id="b_inclusive" style="width:0;background:var(--good)"></span></div>
+
+    <div class="row"><label>Transparency</label><div class="val" id="s_transparency">–</div></div>
+    <div class="bar"><span id="b_transparency" style="width:0;background:var(--good)"></span></div>
+
+    <div class="row"><label>Readability</label><div class="val" id="s_readability">–</div></div>
+    <div class="bar"><span id="b_readability" style="width:0;background:var(--good)"></span></div>
+
+    <div class="row"><label>Jargon load</label><div class="val" id="s_jargon">–</div></div>
+    <div class="bar"><span id="b_jargon" style="width:0;background:var(--good)"></span></div>
+
+    <div class="section">
+      <h2>Red Flags & Fixes</h2>
+      <div class="list" id="flags"></div>
+    </div>
+
+    <div class="section">
+      <h2>Auto-Rewrite (preview)</h2>
+      <div class="small">Rule-based edits: shorter sentences, fewer buzzwords, bullets for long lists, optional transparency boilerplate.</div>
+      <textarea id="rewrite" class="mono" style="min-height:180px;margin-top:8px;"></textarea>
+      <div class="footer">
+        <button id="copySummary">Copy summary</button>
+        <button id="copyRewrite">Copy rewrite</button>
+      </div>
+      <div class="copy small" id="summaryBox"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ---------- Utilities ---------- */
+const buzz = [
+  "synergy","leverage","paradigm","best-in-class","world-class","rockstar","ninja",
+  "guru","disrupt","game-changing","mission-critical","bleeding edge","hypergrowth",
+  "move fast","ownership mentality","wear many hats","self-starter","results-driven",
+  "thought leadership","innovative solutions","go-getter","dynamic environment",
+  "work hard play hard","hustle","grit"
+];
+
+const exclusionary = [
+  "he will","she will","young","digital native","able-bodied","manpower","whitelist","blacklist",
+  "man-hours","guys","strong English-only","native English","must be a US citizen only",
+  "dominant","aggressive","fearless","alpha","manly","macho"
+];
+
+const weasel = ["fast-paced","high-pressure","flexible hours","competitive salary","nice to have","etc.","and/or","as needed","other duties as assigned"];
+
+const claritySignals = [
+  "you will","you'll","responsibilities","what you'll do","outcomes","success","report to","manager","lead","deliverables","first 90 days"
+];
+
+const structureHeadings = [
+  "about us","about the role","what you'll do","responsibilities","requirements","qualifications","nice to have","benefits","compensation","how to apply","eeo","equal opportunity","location"
+];
+
+function wordCount(t){ return (t.match(/\b[\w'-]+\b/g)||[]).length; }
+function sentenceSplit(t){ return t.replace(/\n+/g,' ').split(/(?<=[.!?])\s+/).filter(Boolean); }
+function avg(a){ return a.length? a.reduce((x,y)=>x+y,0)/a.length : 0; }
+function fleschReadingEase(text){
+  // rough syllable estimate
+  const words=(text.match(/\b[\w'-]+\b/g)||[]);
+  const sents=sentenceSplit(text).length||1;
+  const syll=words.reduce((acc,w)=>acc+Math.max(1,(w.match(/[aeiouy]+/gi)||[]).length),0);
+  const W=words.length||1;
+  return Math.max(0, Math.min(100, 206.835 - 1.015*(W/sents) - 84.6*(syll/W)));
+}
+function passiveApprox(text){
+  // crude: forms of "to be" + past participle (ed) not preceded by 'be' verbs
+  const m=(text.match(/\b(is|are|was|were|be|been|being)\s+\w+ed\b/gi)||[]);
+  return m.length;
+}
+function pct(n,d){return d? Math.round(100*n/d):0;}
+
+function barColor(score){
+  if(score>=80) return "var(--good)";
+  if(score>=60) return "var(--warn)";
+  return "var(--bad)";
+}
+
+function setBar(id,score){
+  const el=document.getElementById(id);
+  el.style.width = Math.max(0, Math.min(100, score))+"%";
+  el.style.background = barColor(score);
+}
+
+/* ---------- Analysis ---------- */
+function analyze(text){
+  const raw = text.trim();
+  const lower = raw.toLowerCase();
+  const words = wordCount(raw);
+  const sents = sentenceSplit(raw);
+  const avgLen = avg(sents.map(s=>wordCount(s)));
+  const reading = fleschReadingEase(raw); // 0-100 (higher is easier)
+  const passive = passiveApprox(raw);
+
+  // Presence checks
+  const hasSalary = /\$?\b\d{2,3}[,]?\d{3}\b|\bsalary\b|\bcompensation\b|\bpay range\b/i.test(raw);
+  const hasBenefits = /\bbenefits?\b|\bhealth\b|\bdental\b|\bvision\b|\b401k\b|\bpension\b|\bpto\b/i.test(raw);
+  const hasLocation = /\bremote\b|\bhybrid\b|\bon[- ]site\b|\blocation\b|\b[bB]oston\b|\bMA\b|\bMassachusetts\b/.test(raw);
+  const hasApply = /\bapply\b|\bapplication\b|\bto be considered\b|\bsubmit\b|\bcareers?@|\bgreenhouse\b|\bworkday\b|\blever\b/i.test(raw);
+  const hasEEO = /\bequal opportunity\b|\bEEO\b|\bwe welcome applicants\b/i.test(raw);
+  const hasVisa = /\bvisa\b|\bsponsorship\b|\bwork authorization\b/i.test(raw);
+  const hasHeadings = structureHeadings.some(h=>lower.includes(h));
+  const hasResponsibilities = /(responsibilities|what you'll do|you will)/i.test(raw);
+  const hasRequirements = /(requirements|qualifications)/i.test(raw);
+
+  // Buzz / exclusionary counts
+  const buzzCount = buzz.reduce((c,b)=>c + (lower.includes(b)?1:0),0);
+  const exclCount = exclusionary.reduce((c,w)=>c + (lower.includes(w)?1:0),0);
+  const weaselCount = weasel.reduce((c,w)=>c + (lower.includes(w)?1:0),0);
+
+  // Requirements realism heuristic
+  const yrs = Array.from(raw.matchAll(/\b(\d{1,2})\+?\s+(?:years?|yrs?)\b/gi)).map(m=>parseInt(m[1],10));
+  const minYrs = Math.min(...(yrs.length?yrs:[0]));
+  const title = (raw.match(/\b(Senior|Sr\.|Staff|Principal|Lead|Junior|Jr\.)\b/i)||[])[0] || "";
+  const juniorButHighYears = /Junior|Jr\./i.test(title) && (minYrs>=3);
+  const seniorButLowYears = /Senior|Sr\.|Staff|Principal|Lead/i.test(title) && (minYrs>0 && minYrs<3);
+
+  // Readability score mapping (we want 60–80 ideal)
+  let readabilityScore = 0;
+  if (reading >= 70) readabilityScore = 10;
+  else if (reading >= 60) readabilityScore = 9;
+  else if (reading >= 50) readabilityScore = 7;
+  else if (reading >= 40) readabilityScore = 5;
+  else readabilityScore = 3;
+  readabilityScore -= Math.min(3, Math.floor((avgLen-22)/5)); // penalize long sentences
+  readabilityScore -= Math.min(2, Math.floor(passive/8)); // penalize passive clusters
+  readabilityScore = Math.max(0, Math.min(10, readabilityScore));
+
+  // Subscores
+  let clarity = 25;
+  if (!hasResponsibilities) clarity -= 8;
+  if (!claritySignals.some(sig=>lower.includes(sig))) clarity -= 6;
+  if (!hasApply) clarity -= 4;
+  if (avgLen > 26) clarity -= 3;
+  clarity = Math.max(0,clarity);
+
+  let structure = 15;
+  if(!hasHeadings) structure -= 6;
+  if(!hasRequirements) structure -= 4;
+  if(!hasApply) structure -= 3;
+  structure = Math.max(0,structure);
+
+  let requirements = 15;
+  if (juniorButHighYears) requirements -= 6;
+  if (seniorButLowYears) requirements -= 5;
+  if (yrs.some(y=>y>=10)) requirements -= 3;
+  const techCount = (raw.match(/\b(Java|Python|R|MATLAB|C\+\+|SQL|AWS|Azure|GCP|Docker|Kubernetes|HPLC|LC-MS|qPCR|ELISA|CRISPR|GMP|GLP)\b/gi)||[]).length;
+  if (techCount > 10) requirements -= 3;
+  requirements = Math.max(0,requirements);
+
+  let inclusivity = 15;
+  if (exclCount>0) inclusivity -= Math.min(10, 3 + 2*exclCount);
+  if (/degree required/i.test(raw) && !/or equivalent/i.test(raw)) inclusivity -= 3;
+  if (!hasVisa) inclusivity -= 2; // neutral info missing
+  inclusivity = Math.max(0,inclusivity);
+
+  let transparency = 15;
+  if (!hasSalary) transparency -= 7;
+  if (!hasLocation) transparency -= 3;
+  if (!hasEEO) transparency -= 3;
+  if (!hasBenefits) transparency -= 2;
+  transparency = Math.max(0,transparency);
+
+  let jargon = 5;
+  if (buzzCount>=6) jargon -= 4;
+  else if (buzzCount>=3) jargon -= 2;
+  jargon = Math.max(0, jargon);
+
+  const total = Math.max(0, Math.min(100, Math.round(
+     clarity + structure + requirements + inclusivity + transparency + readabilityScore + jargon
+  )));
+
+  // Flags
+  const flags=[];
+  function addFlag(level, text, fix){
+    flags.push({level,text,fix});
+  }
+  if(!hasSalary) addFlag("bad","No salary/range found.","Add a pay band (base + bonus/equity). Ex: $110k–$135k base + 10% bonus.");
+  if(!hasLocation) addFlag("warn","No clear location/remote/hybrid noted.","State location + onsite % or time zone expectations.");
+  if(!hasEEO) addFlag("warn","EEO statement missing.","Add a brief equal-opportunity statement and accommodations line.");
+  if(!hasBenefits) addFlag("warn","Benefits not described.","Add a short benefits bullet (medical, dental, vision, PTO, retirement).");
+  if(!hasApply) addFlag("warn","No application instructions.","Add application CTA or link (Lever/Greenhouse/Workday) and timeline.");
+  if(juniorButHighYears) addFlag("bad","Junior title requires 3+ years.","Either reduce years or rename to Mid-level.");
+  if(seniorButLowYears) addFlag("warn","Senior title with low years listed.","Align years (typically 5–8+ for Sr; depends by org).");
+  if(buzzCount>=6) addFlag("warn",`Heavy buzzwords detected (${buzzCount}).`,`Replace with plain language tied to outcomes.`);
+  if(exclCount>0) addFlag("bad",`Potentially exclusionary language (${exclCount}).`,`Swap gendered/age-coded terms for neutral phrasing.`);
+  if(avgLen>26) addFlag("warn",`Long sentences (avg ${Math.round(avgLen)} words).`,`Aim for 14–22 words; split complex thoughts.`);
+  if(passive>8) addFlag("warn","Lots of passive voice.","Rewrite to active voice (“You will…”).");
+
+  // Rewrite (rule-based)
+  let rew = raw;
+  // Replace buzzwords with plainer terms
+  const replacements = [
+    ["synergy","work well together"],["leverage","use"],["paradigm","approach"],
+    ["best-in-class","excellent"],["world-class","excellent"],["rockstar","skilled"],
+    ["ninja","expert"],["guru","expert"],["disrupt","improve"],["mission-critical","essential"],
+    ["bleeding edge","advanced"],["hypergrowth","fast-growing"],["results-driven","focused on outcomes"],
+    ["thought leadership","expert knowledge"],["innovative solutions","practical solutions"],
+    ["go-getter","proactive"],["dynamic environment","changing environment"],
+    ["work hard play hard","healthy balance"]
+  ];
+  replacements.forEach(([a,b])=>{
+    const re=new RegExp("\\b"+a.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+"\\b","gi");
+    rew = rew.replace(re,b);
+  });
+  // Trim weasel words
+  weasel.forEach(w=>{
+    const re=new RegExp("\\b"+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+"\\b","gi");
+    rew = rew.replace(re,"");
+  });
+  // Split long sentences
+  rew = sentenceSplit(rew).map(s=>{
+    if(wordCount(s)>28){
+      return s.replace(/, and\b/gi,". And ").replace(/; /g,". ").replace(/: /g,":\n- ");
+    }
+    return s;
+  }).join(" ");
+  // Ensure headings
+  function ensureSection(txt, heading){
+    if(!new RegExp(heading,"i").test(txt)){
+      txt += `\n\n${heading}\n`;
+    }
+    return txt;
+  }
+  rew = ensureSection(rew,"Responsibilities");
+  rew = ensureSection(rew,"Requirements");
+  // Convert lists to bullets where applicable
+  rew = rew.replace(/\b(Responsibilities|Requirements|Benefits|Compensation|How to apply)\b:\s*/gi,"$1\n");
+  rew = rew.replace(/(?:\n|^)(?:-?\s*)\b(Manage|Lead|Design|Build|Develop|Own|Create|Support|Coordinate|Analyze|Implement|Operate|Perform)\b/gi,"- $1");
+  // Append transparency placeholders if missing
+  if(!hasSalary){
+    rew += `\n\nCompensation\n- Base range: $___–$___ (DOE) + bonus/equity where applicable`;
+  }
+  if(!hasEEO){
+    rew += `\n\nEEO\n- We are an equal opportunity employer. We welcome applicants of all backgrounds and provide reasonable accommodations throughout the hiring process.`;
+  }
+  if(!hasApply){
+    rew += `\n\nHow to apply\n- Apply via our careers page or email your resume to careers@example.com. Typical timeline: intro call → panel → decision within 2–3 weeks.`;
+  }
+
+  // Verdict text
+  const verdict = total>=85 ? "Excellent (ready to post)"
+               : total>=70 ? "Good (polish suggested)"
+               : total>=55 ? "Needs revision"
+               : "High friction (rewrite recommended)";
+
+  // Summary (copyable)
+  const summary = [
+    `JD Score: ${total}/100 — ${verdict}`,
+    `• Clarity ${clarity}/25 | Structure ${structure}/15 | Requirements ${requirements}/15 | Inclusivity ${inclusivity}/15 | Transparency ${transparency}/15 | Readability ${readabilityScore}/10 | Jargon ${jargon}/5`,
+    `• Readability: Flesch ${Math.round(reading)} | Avg sentence: ${Math.round(avgLen)} words | Passive flags: ${passive}`,
+    `• Buzzwords: ${buzzCount} | Exclusionary terms: ${exclCount}`,
+    `Top fixes: ${(flags.slice(0,3).map(f=>f.text)).join("; ") || "none"}`
+  ].join("\n");
+
+  return {
+    scores:{total,clarity,structure,requirements,inclusivity,transparency,readabilityScore,jargon},
+    bars:{reading,avgLen,passive},
+    verdict, flags, rewrite: rew, summary
+  };
+}
+
+/* ---------- DOM Wiring ---------- */
+const $ = id => document.getElementById(id);
+
+function render(result){
+  if(!result){ return; }
+  const {scores, verdict, flags, rewrite, summary} = result;
+  $("totalScore").textContent = scores.total;
+  $("verdict").textContent = verdict;
+
+  const pairs = [
+    ["s_clarity","b_clarity",scores.clarity,25],
+    ["s_structure","b_structure",scores.structure,15],
+    ["s_require","b_require",scores.requirements,15],
+    ["s_inclusive","b_inclusive",scores.inclusivity,15],
+    ["s_transparency","b_transparency",scores.transparency,15],
+    ["s_readability","b_readability",scores.readabilityScore,10],
+    ["s_jargon","b_jargon",scores.jargon,5]
+  ];
+  pairs.forEach(([sid,bid,val,base])=>{
+    $(sid).textContent = `${val}/${base}`;
+    setBar(bid, Math.round(100*val/base));
+  });
+
+  // Flags
+  const box = $("flags");
+  box.innerHTML = "";
+  if(flags.length===0){
+    const ok = document.createElement("div");
+    ok.className="item good";
+    ok.innerHTML = "<strong>No major flags.</strong> Looks solid—consider minor polish.";
+    box.appendChild(ok);
+  } else {
+    flags.forEach(f=>{
+      const div=document.createElement("div");
+      div.className = "item " + (f.level==="bad"?"bad":f.level==="warn"?"warn":"");
+      div.innerHTML = `<strong>${f.text}</strong><div class="small">${f.fix||""}</div>`;
+      box.appendChild(div);
+    });
+  }
+
+  $("rewrite").value = rewrite;
+  $("summaryBox").textContent = summary;
+}
+
+$("analyzeBtn").addEventListener("click", ()=>{
+  const text=$("jd").value;
+  if(!text.trim()){ alert("Paste a job description first."); return; }
+  render(analyze(text));
+  localStorage.setItem("jd_last", text);
+});
+
+$("rewriteBtn").addEventListener("click", ()=>{
+  const text=$("jd").value;
+  if(!text.trim()){ alert("Paste a job description first."); return; }
+  const r=analyze(text);
+  $("rewrite").value = r.rewrite;
+  $("summaryBox").textContent = r.summary;
+});
+
+$("sampleBtn").addEventListener("click", ()=>{
+  const sample = `Senior Research Associate, Cell Biology
+
+About us
+We are building practical therapies for rare disease. You will join a tight-knit team that ships experiments weekly.
+
+What you'll do
+- Run cell-based assays (qPCR, ELISA) and maintain mammalian cell lines
+- Design and execute experiments; analyze and present results
+- Own lab operations (ordering, inventory, equipment logs)
+- Collaborate with cross-functional teams to deliver study milestones
+- Report to the Cell Biology Lead; success in 90 days = 3 validated assay SOPs
+
+Requirements
+- BS/MS in Biology or related field
+- 3+ years cell culture and assay experience
+- Experience with GMP/GLP documentation
+Nice to have
+- CRISPR, flow cytometry, or automation
+
+Compensation
+Base $95,000–$115,000 + bonus; benefits include medical, dental, vision, 401(k), and generous PTO
+
+Location
+Boston, MA (hybrid, 3 days on-site)
+
+How to apply
+Apply on our Lever page. Typical process: intro (30m) → onsite panel → decision within 2 weeks.
+
+EEO
+We are an equal opportunity employer and provide reasonable accommodations for candidates with disabilities. Visa sponsorship available depending on role.`;
+  $("jd").value = sample;
+});
+
+$("clearBtn").addEventListener("click", ()=>{
+  $("jd").value = ""; $("rewrite").value=""; $("summaryBox").textContent="";
+  ["totalScore","s_clarity","s_structure","s_require","s_inclusive","s_transparency","s_readability","s_jargon"].forEach(id=>$(id).textContent="–");
+  ["b_clarity","b_structure","b_require","b_inclusive","b_transparency","b_readability","b_jargon"].forEach(id=>setBar(id,0));
+  $("flags").innerHTML="";
+  $("verdict").textContent="Awaiting input";
+  localStorage.removeItem("jd_last");
+});
+
+$("copySummary").addEventListener("click", ()=>{
+  navigator.clipboard.writeText($("summaryBox").textContent.trim());
+});
+
+$("copyRewrite").addEventListener("click", ()=>{
+  navigator.clipboard.writeText($("rewrite").value.trim());
+});
+
+// restore last
+const last = localStorage.getItem("jd_last"); if(last){ $("jd").value=last; }
+</script>
+</body>
+</html>
